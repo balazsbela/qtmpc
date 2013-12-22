@@ -1,9 +1,10 @@
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x000000
 TEMPLATE = app
-TARGET =
+TARGET = QtMPC
 DEPENDPATH += . gui lib
 INCLUDEPATH += . lib ./external/libmaia/
 CONFIG += qt
-QT += network xml
+QT += http network xml widgets gui
 RESOURCES = QtMPC.qrc
 #DEFINES += QT_NO_DEBUG_OUTPUT
 
@@ -78,3 +79,6 @@ SOURCES += main.cpp \
 		lib/mpdstatus.cpp \
 		lib/song.cpp \
 		external/synchttp/synchttp.cpp
+
+OTHER_FILES += \
+    qhttp.pri

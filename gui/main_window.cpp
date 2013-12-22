@@ -23,6 +23,7 @@
 #include <QSettings>
 #include <QString>
 #include <cstdlib>
+#include <QMessageBox>
 
 #ifdef ENABLE_KDE_SUPPORT
 #include <KApplication>
@@ -33,6 +34,10 @@
 #include <KNotification>
 #include <KStandardAction>
 #include <kaboutapplicationdialog.h>
+#endif
+
+#ifdef QT_VERSION >= 0x040400
+#include <QCommonStyle>
 #endif
 
 #include "main_window.h"
@@ -200,7 +205,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 	// Playlist table view
 	playlistTableView->setModel(&playlistModel);
 	playlistTableView->verticalHeader()->hide();
-	playlistTableView->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
+    playlistTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
 	playlistTableView->setDragEnabled(true);
 	playlistTableView->setAcceptDrops(true);
 	playlistTableView->setDropIndicatorShown(true);

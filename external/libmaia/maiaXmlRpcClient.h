@@ -31,6 +31,7 @@
 #include <QtCore>
 #include <QtXml>
 #include <QtNetwork>
+#include <QHttp>
 
 #include "maiaObject.h"
 

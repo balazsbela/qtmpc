@@ -95,6 +95,7 @@ QByteArray * MPDConnection::readFromSocket()
 
 bool MPDConnection::connectToMPD()
 {
+    qWarning() << "Connecting to MPD";
 	QByteArray senddata;
 	QByteArray *recvdata;
 
