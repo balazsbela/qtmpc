@@ -36,12 +36,13 @@ class MusicLibraryItem
 		MusicLibraryItem(const QString &data, Type type);
 		virtual ~MusicLibraryItem();
 
-		virtual MusicLibraryItem * const child(int /*row*/) const { return NULL; }
+		virtual MusicLibraryItem * child(int /*row*/) const { return NULL; }
 		virtual int childCount() const { return 0; }
+		virtual int row() const { return 0; }
+		virtual MusicLibraryItem * parent() const { return NULL; }
+
 		int columnCount() const { return 1; }
 		QVariant data(int column) const;
-		virtual int row() const { return 0; }
-		virtual MusicLibraryItem * const parent() const { return NULL; }
 		MusicLibraryItem::Type type() const;
 
 	protected:

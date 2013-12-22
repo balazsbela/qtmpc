@@ -42,6 +42,7 @@ class MPDStatus
 
 		// Getters
 		static quint8 volume();
+		static bool consume();
 		static bool repeat();
 		static bool random();
 		static quint32 playlist();
@@ -62,6 +63,7 @@ class MPDStatus
 
 		// Setters
 		static void setVolume(quint8 volume);
+		static void setConsume(bool consume);
 		static void setRepeat(bool repeat);
 		static void setRandom(bool random);
 		static void setPlaylist(quint32 playlist);
@@ -82,6 +84,7 @@ class MPDStatus
 
 	private:
 		static quint8 m_volume;
+		static bool m_consume;
 		static bool m_repeat;
 		static bool m_random;
 		static quint32 m_playlist;

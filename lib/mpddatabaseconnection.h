@@ -21,25 +21,22 @@
 #ifndef MPDDATABASECONNECTION_H
 #define MPDDATABASECONNECTION_H
 
-#include "lib/mpdconnection.h"
+#include "lib/mpdconnectionbase.h"
 
 class MusicLibraryItemArtist;
 class DirViewItemRoot;
+class MusicLibraryItemRoot;
 
-class MPDDatabaseConnection : public MPDConnection
+class MPDDatabaseConnection : public MPDConnectionBase
 {
 	Q_OBJECT
 
 	public:
 		MPDDatabaseConnection(QObject *parent = 0);
 		MPDDatabaseConnection(const QString &host, const quint16 port, QObject *parent = 0);
-#if QT_VERSION < 0x040400
-		void run();
-#endif
 
 		// Database
 		void listAllInfo(QDateTime db_update);
-		void lsInfo();
 		void listAll();
 		// TODO
 
@@ -48,7 +45,7 @@ class MPDDatabaseConnection : public MPDConnection
 		void update();
 
 	signals:
-		void musicLibraryUpdated(QList<MusicLibraryItemArtist *> *items, QDateTime db_update);
+		void musicLibraryUpdated(MusicLibraryItemRoot * root, QDateTime db_update);
 		void dirViewUpdated(DirViewItemRoot * root);
 };
 

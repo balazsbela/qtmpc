@@ -35,7 +35,7 @@ class MusicLibraryItemSong : public MusicLibraryItem
 		~MusicLibraryItemSong();
 
 		int row() const;
-		MusicLibraryItem * const parent() const;
+		MusicLibraryItem * parent() const;
 		const QString & file() const;
 		void setFile(const QString &filename);
 		void setTrack(quint32 track_nr);

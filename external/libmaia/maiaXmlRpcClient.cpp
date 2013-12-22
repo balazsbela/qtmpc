@@ -28,56 +28,61 @@
 #include "maiaXmlRpcClient.h"
 #include "maiaFault.h"
 
-MaiaXmlRpcClient::MaiaXmlRpcClient(QObject* parent) : QObject(parent)
-{
+MaiaXmlRpcClient::MaiaXmlRpcClient(QObject* parent) : QObject(parent) {
+	http = new QHttp(this);
 }
 
-MaiaXmlRpcClient::MaiaXmlRpcClient(QUrl url, QObject* parent) : QObject(parent)
-{
+MaiaXmlRpcClient::MaiaXmlRpcClient(QUrl url, QObject* parent) : QObject(parent) {
+	http = new QHttp(this);
 	setUrl(url);
 }
 
-void MaiaXmlRpcClient::setUrl(QUrl url)
-{
+void MaiaXmlRpcClient::setUrl(QUrl url) {
 	if(!url.isValid())
 		return;
-
+		
 	m_url = url;
-	http.setHost(m_url.host(), m_url.port() != -1 ? m_url.port() : 80);
+	http->setHost(m_url.host(), m_url.port() != -1 ? m_url.port() : 80);
 	if (!m_url.userName().isEmpty())
-		http.setUser(m_url.userName(), m_url.password());
+		http->setUser(m_url.userName(), m_url.password());
 }
 
 void MaiaXmlRpcClient::call(QString method, QList<QVariant> args,
 							QObject* responseObject, const char* responseSlot,
-							QObject* faultObject, const char* faultSlot)
-{
+							QObject* faultObject, const char* faultSlot) {
 	int callid = 0;
 	MaiaObject* call = new MaiaObject(this);
 	connect(call, SIGNAL(aresponse(QVariant &)), responseObject, responseSlot);
 	connect(call, SIGNAL(fault(int, const QString &)), faultObject, faultSlot);
 
-	connect(&http, SIGNAL(requestFinished(int, bool)), this, SLOT(httpRequestDone(int, bool)));
-
+	connect(http, SIGNAL(requestFinished(int, bool)), this, SLOT(httpRequestDone(int, bool)));
+        connect(http, SIGNAL(responseHeaderReceived(QHttpResponseHeader)), this, SLOT(responseHeaderReceived(QHttpResponseHeader)));
+	
 	QHttpRequestHeader header("POST", m_url.path());
-	header.setValue("Host", m_url.host());
+	header.setValue("Host", m_url.host()); 
 	header.setValue("User-Agent", "libmaia 0.1");
 	header.setValue("Content-type", "text/xml");
-	callid = http.request(header, call->prepareCall(method, args).toUtf8());
+        if (cookie.length()>0) header.setValue("Cookie", cookie);
+	callid = http->request(header, call->prepareCall(method, args).toUtf8());
 	callmap[callid] = call;
 }
 
-void MaiaXmlRpcClient::httpRequestDone(int id, bool error)
-{
+void MaiaXmlRpcClient::httpRequestDone(int id, bool error) {
 	QString response;
 	if(!callmap.contains(id))
 		return;
 	if(error) {
-		MaiaFault fault(-32300, http.errorString());
+		MaiaFault fault(-32300, http->errorString());
 		response = fault.toString();
 	} else {
-		response = QString::fromUtf8(http.readAll());
+		response = QString::fromUtf8(http->readAll());
 	}
 	callmap[id]->parseResponse(response);
 	callmap.remove(id);
+}
+
+void MaiaXmlRpcClient::responseHeaderReceived(QHttpResponseHeader header) {
+    if (header.keys().contains("Set-Cookie")) {
+        cookie = header.value("Set-Cookie");
+    }
 }

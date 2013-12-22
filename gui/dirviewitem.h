@@ -37,14 +37,15 @@ class DirViewItem
 		virtual ~DirViewItem();
 
 		virtual int row() const { return 0; }
-		virtual DirViewItem * const parent() const { return NULL; }
+		virtual DirViewItem * parent() const { return NULL; }
 		virtual int childCount() const { return 0; }
+		virtual DirViewItem * child(int /*row*/) const { return NULL; }
+		virtual QString fileName() { return QString(); }
+
 		int columnCount() const { return 1; }
 		QVariant data(int) const { return d_name; }
-		virtual DirViewItem * const child(int /*row*/) const { return NULL; }
 		QString name() { return d_name; }
 		DirViewItem::Type type() const { return d_type; }
-		virtual QString fileName() { return QString(); }
 
 	protected:
 		QString d_name;

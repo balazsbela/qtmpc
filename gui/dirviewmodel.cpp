@@ -22,7 +22,9 @@
 #include <QModelIndex>
 #include <QString>
 #include <QVariant>
-
+#include <QMimeData>
+#include <QDesktopServices>
+#include <QMessageBox>
 #include "dirviewmodel.h"
 #include "dirviewitem.h"
 
@@ -122,11 +124,58 @@ QVariant dirViewModel::data(const QModelIndex &index, int role) const
 	return QVariant();
 }
 
-void dirViewModel::dirViewUpdated(DirViewItemRoot *newroot)
+void dirViewModel::updateDirView(DirViewItemRoot *newroot)
 {
 	const DirViewItemRoot *oldRoot = rootItem;
+
+	beginResetModel();
+
 	rootItem = newroot;
+
 	delete oldRoot;
 
-	reset();
+	endResetModel();
+}
+
+Qt::ItemFlags dirViewModel::flags(const QModelIndex &index) const
+{
+	if (index.isValid())
+		return Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsEnabled;
+	else
+		return Qt::ItemIsDropEnabled;
+}
+
+QMimeData *dirViewModel::mimeData(const QModelIndexList &indexes) const
+{
+	QMimeData *mimeData = new QMimeData();
+	QByteArray encodedData;
+        
+
+	QDataStream stream(&encodedData, QIODevice::WriteOnly);
+        QStringList filenames;
+
+	foreach (QModelIndex index, indexes) {
+		DirViewItem *item = static_cast<DirViewItem *>(index.internalPointer());
+                recurseDirItems(*item, filenames);
+	}
+
+	for (int i = filenames.size() - 1; i >= 0; i--) {
+		stream << filenames.at(i);
+	}
+	mimeData->setData("application/qtmpc_songs_filename_text", encodedData);
+	return mimeData;
+}
+
+void dirViewModel::recurseDirItems(DirViewItem &parent, QStringList &filenames) const
+{
+    if (parent.childCount() == 0) {
+        if (!filenames.contains(parent.fileName()))
+        {
+            filenames << parent.fileName();
+        }
+    } else {
+        for (int i = 0; i < parent.childCount(); i++) {
+            recurseDirItems(*parent.child(i), filenames);
+        }
+    }
 }

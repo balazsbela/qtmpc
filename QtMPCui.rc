@@ -3,9 +3,13 @@
 <gui name="QtMPC" version="1">
   <MenuBar>
   	<Menu name="actions">
-		<text>Actions</text>
-		<Action name="updatedatabase" />
-		<Action name="showstatistics" />
-	</Menu>
+		  <text>Actions</text>
+		  <Action name="updatedatabase" />
+		  <Action name="showstatistics" />
+    </Menu>
+    <Menu name="output_menu">
+      <text>Outputs</text>
+      <ActionList name="outputs_list" />
+    </Menu>
   </MenuBar>
 </gui>

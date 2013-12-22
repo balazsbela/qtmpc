@@ -19,12 +19,12 @@
  */
 
 #include "statistics_dialog.h"
-#include "mpdstats.h"
+#include "lib/mpdstats.h"
 
 #include <QString>
 #include <QTime>
 
-#include "mpdparseutils.h"
+#include "lib/mpdparseutils.h"
 
 #ifdef ENABLE_KDE_SUPPORT
 StatisticsDialog::StatisticsDialog(QWidget *parent, Qt::WindowFlags f)

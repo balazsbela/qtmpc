@@ -49,7 +49,7 @@ int DirViewItemDir::row() const
 	return 0;
 }
 
-DirViewItem * const DirViewItemDir::parent() const
+DirViewItem * DirViewItemDir::parent() const
 {
 	return d_parentItem;
 }
@@ -75,7 +75,7 @@ DirViewItem * DirViewItemDir::insertFile(const QString fileName)
 	return file;
 }
 
-DirViewItem * const DirViewItemDir::child(int row) const
+DirViewItem * DirViewItemDir::child(int row) const
 {
 	return d_childItems.value(row);
 }

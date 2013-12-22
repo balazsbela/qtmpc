@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 		ki18n(qPrintable(PACKAGE_NAME)), qPrintable(PACKAGE_VERSION),
 		ki18n("A Qt interface to MPD"),
 		KAboutData::License_GPL_V2,
-		ki18n("Copyright (C) 2007-2009  The QtMPC Authors"),
+		ki18n("Copyright (C) 2007-2010  The QtMPC Authors"),
 		ki18n(""),
 		"http://qtmpc.lowblog.nl/",
 		""
@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
 
 	aboutData.addAuthor(ki18n("Sander Knopper"), ki18n(""), "", "http://www.knopper.tk/");
 	aboutData.addAuthor(ki18n("Roeland Douma"), ki18n(""), "", "http://rullzer.com/");
+	aboutData.addAuthor(ki18n("Daniel Selinger"), ki18n(""), "", "");
+	aboutData.addAuthor(ki18n("Armin Walland"), ki18n(""), "", "");
 
 	KCmdLineArgs::init( argc, argv, &aboutData );
 

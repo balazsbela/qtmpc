@@ -27,7 +27,8 @@ Song::Song()
 	  time(0),
 	  track(0),
 	  pos(0),
-	  disc(0)
+	  disc(0),
+          year(0)
 {
 }
 
@@ -41,7 +42,8 @@ Song::Song(const Song &s)
 	  title(s.title),
 	  track(s.track),
 	  pos(s.pos),
-	  disc(s.disc)
+	  disc(s.disc),
+          year(s.year)
 {
 }
 
@@ -56,7 +58,7 @@ Song& Song::operator=(const Song &s)
 	track = s.track;
 	pos = s.pos;
 	disc = s.disc;
-
+        year = s.year;
 	return *this;
 }
 
@@ -96,6 +98,7 @@ void Song::clear()
 	track = 0;
 	pos = 0;
 	disc = 0;
+        year = 0;
 }
 
 QString Song::formattedTime(const quint32 &seconds)
@@ -111,16 +114,25 @@ QString Song::formattedTime(const quint32 &seconds)
 	return result;
 }
 
-ScrobblingSong::ScrobblingSong() : Song()
+/*
+ * Genarate a string with song info.
+ * Currently in this format:
+ * artist - [album -][#.] song
+ */
+const QString Song::formatSong(const Song *song)
 {
-}
-
-ScrobblingSong::ScrobblingSong(const ScrobblingSong &s) : Song(s), timePlayedAt(s.timePlayedAt)
-{
-}
-
-void ScrobblingSong::clear()
-{
-	Song::clear();
-	timePlayedAt.clear();
+	QString s = "";
+	s += song->artist + " - ";
+	
+	if (song->album != "") {
+		s += song->album + " - ";
+	}
+	
+	if (song->track != 0) {
+		s += QString::number(song->track) + ". ";
+	}
+	
+	s += song->title;
+	
+	return s;
 }

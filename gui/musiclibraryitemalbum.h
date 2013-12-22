@@ -38,10 +38,10 @@ class MusicLibraryItemAlbum : public MusicLibraryItem
 		void appendChild(MusicLibraryItem * const child);
 		void insertChild(MusicLibraryItem * const child, const int place);
 
-		MusicLibraryItem * const child(int row) const;
+		MusicLibraryItem * child(int row) const;
 		int childCount() const;
 		int row() const;
-		MusicLibraryItem * const parent() const;
+		MusicLibraryItem * parent() const;
 		void clearChildren();
 
 	private:

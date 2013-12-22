@@ -31,8 +31,43 @@
 #include "mpdparseutils.h"
 #include "mpdstats.h"
 #include "mpdstatus.h"
+#include "playlist.h"
 #include "song.h"
+#include "output.h"
+#include "gui/musiclibraryitemroot.h"
 
+
+QList<Playlist *> * MPDParseUtils::parsePlaylists(const QByteArray * const data)
+{
+	QList<Playlist *> *playlists = new QList<Playlist *>;
+
+	QList<QByteArray> lines = data->split('\n');
+	QList<QByteArray> tokens;
+
+	int amountOfLines = lines.size();
+
+	for(int i = 0; i < amountOfLines; i++) {
+		tokens = lines.at(i).split(':');
+
+		if(tokens.at(0) == "playlist") {
+			Playlist *playlist = new Playlist;
+			playlist->m_name = tokens.at(1).simplified();
+			i++;
+			tokens = lines.at(i).split(':');
+
+			if(tokens.at(0) == "Last-Modified") {
+				QByteArray last_modified(tokens.at(1));
+				last_modified += tokens.at(2);
+				last_modified += tokens.at(3);
+				playlist->m_last_modified.fromString(last_modified, Qt::ISODate);
+
+				playlists->append(playlist);
+			}
+		}
+	}
+
+	return playlists;
+}
 
 void MPDParseUtils::parseStats(const QByteArray * const data)
 {
@@ -82,6 +117,12 @@ void MPDParseUtils::parseStatus(const QByteArray * const data)
 
 		if(tokens.at(0) == "volume") {
 			status->setVolume(tokens.at(1).toUInt());
+		} else if(tokens.at(0) == "consume") {
+			if(tokens.at(1).trimmed() == "1") {
+				status->setConsume(true);
+			} else {
+				status->setConsume(false);
+			}
 		} else if(tokens.at(0) == "repeat") {
 			if(tokens.at(1).trimmed() == "1") {
 				status->setRepeat(true);
@@ -160,13 +201,15 @@ Song * MPDParseUtils::parseSong(const QByteArray * const data)
 		} else if(element == "Title") {
 			song->title = value;
 		} else if(element == "Track") {
-			song->track = value.toInt();
+			song->track = value.split("/").at(0).toInt();
 		} else if(element == "Pos") {
 			song->pos = value.toInt();
 		} else if(element == "Id") {
 			song->id = value.toUInt();
 		} else if (element == "Disc") {
-			song->disc = value.toUInt();
+			song->disc = value.split("/").at(0).toUInt();
+		} else if (element == "Date") {
+			song->year = value.toUInt();
 		}
 	}
 
@@ -194,9 +237,9 @@ QList<Song *> * MPDParseUtils::parseSongs(const QByteArray * const data)
 	return songs;
 }
 
-QList<MusicLibraryItemArtist *> * MPDParseUtils::parseLibraryItems(const QByteArray * const data)
+MusicLibraryItemRoot * MPDParseUtils::parseLibraryItems(const QByteArray * const data)
 {
-	QList<MusicLibraryItemArtist *> *artists = new QList<MusicLibraryItemArtist *>;
+	MusicLibraryItemRoot * const rootItem = new MusicLibraryItemRoot("Artist / Album / Song");
 	QByteArray currentItem;
 	MusicLibraryItemArtist *artistItem = NULL;
 	MusicLibraryItemAlbum *albumItem = NULL;
@@ -222,19 +265,19 @@ QList<MusicLibraryItemArtist *> * MPDParseUtils::parseLibraryItems(const QByteAr
 
 			currentSong->fillEmptyFields();
 
-			int amountOfArtists = artists->size();
+			int amountOfArtists = rootItem->childCount();
 
 			// Check if artist already exists
-			for(int i = 0; i < amountOfArtists; i++) {
-				if(artists->at(i)->data(0) == currentSong->artist) {
-					artistItem = artists->at(i);
+			for(int i = amountOfArtists - 1; i >= 0; i--) {
+				if(rootItem->child(i)->data(0) == currentSong->artist) {
+					artistItem = static_cast<MusicLibraryItemArtist *>(rootItem->child(i));
 					found = true;
 				}
 			}
 
 			if(!found) {
-				artistItem = new MusicLibraryItemArtist(currentSong->artist);
-				artists->append(artistItem);
+				artistItem = new MusicLibraryItemArtist(currentSong->artist, rootItem);
+				rootItem->appendChild(artistItem);
 			}
 
 			found = false;
@@ -242,7 +285,7 @@ QList<MusicLibraryItemArtist *> * MPDParseUtils::parseLibraryItems(const QByteAr
 			int amountOfAlbums = artistItem->childCount();
 
 			// Check if album already exists
-			for(int i = 0; i < amountOfAlbums; i++) {
+			for(int i = amountOfAlbums - 1; i >= 0; i--) {
 				if(artistItem->child(i)->data(0) == currentSong->album) {
 					albumItem = static_cast<MusicLibraryItemAlbum *>(artistItem->child(i));
 					found = true;
@@ -267,7 +310,7 @@ QList<MusicLibraryItemArtist *> * MPDParseUtils::parseLibraryItems(const QByteAr
 		}
 	}
 
-	return artists;
+	return rootItem;
 }
 
 DirViewItemRoot * MPDParseUtils::parseDirViewItems(const QByteArray * const data)
@@ -280,7 +323,7 @@ DirViewItemRoot * MPDParseUtils::parseDirViewItems(const QByteArray * const data
 
 	int amountOfLines = lines.size();
 	for (int i = 0; i < amountOfLines; i++) {
-		QString line(lines.at(i));
+		QString line = QString::fromUtf8(lines.at(i));
 
 		if (line.startsWith("file: ")) {
 			line.remove(0, 6);
@@ -350,3 +393,27 @@ QString MPDParseUtils::seconds2formattedString(const quint32 totalseconds)
 
 	return string;
 }
+
+QList<Output *> MPDParseUtils::parseOuputs(const QByteArray * const data)
+{
+	QList<Output *> outputs;
+	QList<QByteArray> lines = data->split('\n');
+	
+	for (int i = 0; i < lines.size(); ) {
+		if (lines.at(i) == "OK") {
+			break;
+		}
+		
+		quint8 id = lines.at(i).mid(10).toInt();
+		QString name = QString(lines.at(i+1).mid(12));
+		bool enabled = lines.at(i+2).mid(15).toInt() == 0 ? false : true;
+		
+		Output *o = new Output(id, enabled, name);
+		outputs << o;
+		
+		i += 3;
+	}
+	
+	return outputs;
+}
+

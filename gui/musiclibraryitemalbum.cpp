@@ -49,7 +49,7 @@ void MusicLibraryItemAlbum::insertChild(MusicLibraryItem * const child, const in
 	m_childItems.insert(place, static_cast<MusicLibraryItemSong *>(child));
 }
 
-MusicLibraryItem * const MusicLibraryItemAlbum::child(int row) const
+MusicLibraryItem * MusicLibraryItemAlbum::child(int row) const
 {
 	return m_childItems.value(row);
 }
@@ -59,7 +59,7 @@ int MusicLibraryItemAlbum::childCount() const
 	return m_childItems.count();
 }
 
-MusicLibraryItem * const MusicLibraryItemAlbum::parent() const
+MusicLibraryItem * MusicLibraryItemAlbum::parent() const
 {
 	return m_parentItem;
 }
@@ -72,4 +72,5 @@ int MusicLibraryItemAlbum::row() const
 void MusicLibraryItemAlbum::clearChildren()
 {
 	qDeleteAll(m_childItems);
+	m_childItems.clear();
 }

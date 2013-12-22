@@ -28,8 +28,7 @@ PreferencesDialog::PreferencesDialog(const int tab, QWidget *parent, Qt::WindowF
 PreferencesDialog::PreferencesDialog(const int tab, QWidget *parent, Qt::WindowFlags f)
 	: QDialog(parent, f),
 #endif
-	  xfade(MPDStatus::getInstance()->xfade()),
-		lastFmUpdated(false)
+	  xfade(MPDStatus::getInstance()->xfade())
 {
 #ifdef ENABLE_KDE_SUPPORT
 	QWidget *widget = new QWidget(this);
@@ -70,14 +69,9 @@ void PreferencesDialog::loadSettings()
 		systemTrayPopup->setEnabled(false);
 	}
 	crossfading->setValue(xfade);
-	updateInterval->setValue(settings.value("connection/interval", 1000).toInt());
 
-	bool lastfm = settings.value("lastfm/enabled", "false").toBool();
-	lastFmCheckBox->setChecked(lastfm);
-	lastFmUserName->setText(settings.value("lastfm/username", "").toString());
-	lastFmPassword->setText(settings.value("lastfm/password", "").toString());
-	lastFmUserName->setEnabled(lastfm);
-	lastFmPassword->setEnabled(lastfm);
+	bool checkInfo = settings.value("fetchAlbumInfo", "true").toBool();
+	fetchInfoCheckBox->setChecked(checkInfo);
 }
 
 void PreferencesDialog::writeSettings()
@@ -85,19 +79,9 @@ void PreferencesDialog::writeSettings()
 	settings.setValue("connection/host", hostLineEdit->text());
 	settings.setValue("connection/port", portSpinBox->value());
 	settings.setValue("connection/password", passwordLineEdit->text());
-	settings.setValue("connection/interval", updateInterval->value());
 	settings.setValue("systemtray", systemTrayCheckBox->isChecked());
 	
-	//Lastfm stuff is updated
-	if (settings.value("lastfm/enabled", "false").toBool() != lastFmCheckBox->isChecked() ||
-		settings.value("lastfm/username", "") != lastFmUserName->text() ||
-		settings.value("lastfm/password", "") != lastFmPassword->text()) {
-			lastFmUpdated = true;
-		}
-		
-		settings.setValue("lastfm/enabled", lastFmCheckBox->isChecked());
-	settings.setValue("lastfm/username", lastFmUserName->text());
-	settings.setValue("lastfm/password", lastFmPassword->text());
+	settings.setValue("fetchAlbumInfo", fetchInfoCheckBox->isChecked());
 
 	if (systemTrayCheckBox->isChecked()) {
 		settings.setValue("systemtrayPopup", systemTrayPopup->isChecked());
@@ -107,14 +91,6 @@ void PreferencesDialog::writeSettings()
 	if (crossfading->value() != xfade)
 		emit crossfadingChanged(crossfading->value());
 	emit systemTraySet(systemTrayCheckBox->isChecked());
-	emit updateIntervalChanged(updateInterval->value());
-}
-
-void PreferencesDialog::emitLastFmReAuth()
-{
-	if (lastFmUpdated) {
-		emit lastFmReAuth(settings.value("lastfm/enabled", "false").toBool());
-	}
 }
 
 #ifdef ENABLE_KDE_SUPPORT
@@ -126,7 +102,6 @@ void PreferencesDialog::slotButtonClicked(int button)
 			writeSettings();
 			break;
 		case KDialog::Cancel:
-			emitLastFmReAuth();
 			reject();
 			break;
 		default:
@@ -135,7 +110,6 @@ void PreferencesDialog::slotButtonClicked(int button)
 	}
 
 	if(button == KDialog::Ok) {
-		emitLastFmReAuth();
 		accept();
 	}
 
@@ -160,7 +134,5 @@ void PreferencesDialog::buttonPressed(QAbstractButton *button)
 			// unhandled button
 			break;
 	}
-
-	emitLastFmReAuth();
 }
 #endif

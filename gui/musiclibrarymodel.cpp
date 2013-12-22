@@ -21,8 +21,10 @@
 #include "gui/musiclibraryitemalbum.h"
 #include "gui/musiclibraryitemartist.h"
 #include "gui/musiclibraryitemsong.h"
+#include "gui/musiclibraryitemroot.h"
 #include "musiclibrarymodel.h"
 
+#include <QCommonStyle>
 #include <QFile>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
@@ -113,37 +115,48 @@ QVariant MusicLibraryModel::data(const QModelIndex &index, int role) const
 	if(!index.isValid())
 		return QVariant();
 
-	if(role != Qt::DisplayRole)
+	if(role != Qt::DisplayRole && role != Qt::DecorationRole)
 		return QVariant();
 
 	MusicLibraryItem *item = static_cast<MusicLibraryItem *>(index.internalPointer());
 
-	return item->data(index.column());
-}
-
-void MusicLibraryModel::updateLibrary(QList<MusicLibraryItemArtist *> *items, QDateTime db_update, bool fromFile)
-{
-	MusicLibraryItemArtist *item;
-
-	const MusicLibraryItemRoot *oldRoot = rootItem;
-	MusicLibraryItemRoot * const newRoot = new MusicLibraryItemRoot("Artist / Album / Song");
-
-	while(items->size()) {
-		item = items->takeFirst();
-		item->setParent(newRoot);
-		newRoot->appendChild(item);
+	if(role == Qt::DecorationRole) {
+		if(item->type() == MusicLibraryItem::Type_Artist) {
+			return QIcon(":/images/artist.png");
+		} else if(item->type() == MusicLibraryItem::Type_Album) {
+			return QIcon(":/images/album.png");
+		} else if(item->type() == MusicLibraryItem::Type_Song) {
+			return QIcon(":/images/song.png");
+		}
+	} else {
+		return item->data(index.column());
 	}
 
-	rootItem = newRoot;
+	return QVariant();
+}
 
-	delete items;
+void MusicLibraryModel::updateMusicLibrary(MusicLibraryItemRoot *newroot, QDateTime db_update, bool fromFile)
+{
+	libraryMutex.lock();
+	const MusicLibraryItemRoot *oldRoot = rootItem;
+	
+	if (databaseTime > db_update) {
+		libraryMutex.unlock();
+		return;
+	}
+
+	beginResetModel();
+
+	databaseTime = db_update;
+	rootItem = newroot;
 	delete oldRoot;
 
-	reset();
+	endResetModel();
 
 	if(!fromFile) {
 		toXML(db_update);
 	}
+	libraryMutex.unlock();
 }
 
 /**
@@ -237,7 +250,7 @@ bool MusicLibraryModel::fromXML(const QDateTime db_update)
 
 	QFile file(dir+filename);
 
-	QList<MusicLibraryItemArtist *> *artists = new QList<MusicLibraryItemArtist *>;
+	MusicLibraryItemRoot * const rootItem = new MusicLibraryItemRoot("Artist / Album / Song");
 	MusicLibraryItemArtist *artistItem = NULL;
 	MusicLibraryItemAlbum *albumItem = NULL;
 	MusicLibraryItemSong *songItem = NULL;
@@ -281,8 +294,8 @@ bool MusicLibraryModel::fromXML(const QDateTime db_update)
 					if (element == "Artist") {
 						QString artist_string = reader.attributes().value("name").toString();
 
-						artistItem = new MusicLibraryItemArtist(artist_string);
-						artists->append(artistItem);
+						artistItem = new MusicLibraryItemArtist(artist_string, rootItem);
+						rootItem->appendChild(artistItem);
 					}
 
 					// New album element. Create it and add it to the artist
@@ -319,12 +332,12 @@ bool MusicLibraryModel::fromXML(const QDateTime db_update)
 
 	//If not valid we need to cleanup
 	if (!valid) {
-		delete artists;
+		delete rootItem;
 		return false;
 	}
 
 	file.close();
-	updateLibrary(artists, QDateTime(), true);
+	updateMusicLibrary(rootItem, QDateTime(), true);
 	return true;
 }
 
@@ -396,7 +409,12 @@ QStringList MusicLibraryModel::sortAlbumTracks(const MusicLibraryItemAlbum *albu
 	QStringList unorderedTracks;
 
 	for(int i = 0; i < album->childCount(); i++) {
-		MusicLibraryItemSong *track = static_cast<MusicLibraryItemSong*>(album->child(i));
+		MusicLibraryItemSong *tmp_track = static_cast<MusicLibraryItemSong*>(album->child(i));
+		MusicLibraryItemSong *track = new MusicLibraryItemSong("Song");
+		track->setTrack(tmp_track->track());
+		track->setDisc(tmp_track->disc());
+		track->setFile(tmp_track->file());
+
 		if (track->track() == (quint32)0) {
 			unorderedTracks << track->file();
 		}
@@ -414,7 +432,7 @@ QStringList MusicLibraryModel::sortAlbumTracks(const MusicLibraryItemAlbum *albu
 			orderedTracks->insertChild(track, orderedTracks->childCount());
 		}
 	}
-
+	
 	QStringList tracks;
 	for (int i = 0; i < orderedTracks->childCount(); i++) {
 		tracks << static_cast<MusicLibraryItemSong*>(orderedTracks->child(i))->file();

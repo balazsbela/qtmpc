@@ -22,7 +22,6 @@
 #include "musiclibraryitemartist.h"
 #include "musiclibraryitemalbum.h"
 
-
 MusicLibraryItemArtist::MusicLibraryItemArtist(const QString &data, MusicLibraryItem *parent)
 	: MusicLibraryItem(data, MusicLibraryItem::Type_Artist),
 	  m_parentItem(static_cast<MusicLibraryItemRoot *>(parent))
@@ -50,7 +49,7 @@ void MusicLibraryItemArtist::insertChild(MusicLibraryItem * const child, const i
 	m_childItems.insert(place, static_cast<MusicLibraryItemAlbum *>(child));
 }
 
-MusicLibraryItem * const MusicLibraryItemArtist::child(int row) const
+MusicLibraryItem * MusicLibraryItemArtist::child(int row) const
 {
 	return m_childItems.value(row);
 }
@@ -60,7 +59,7 @@ int MusicLibraryItemArtist::childCount() const
 	return m_childItems.count();
 }
 
-MusicLibraryItem * const MusicLibraryItemArtist::parent() const
+MusicLibraryItem * MusicLibraryItemArtist::parent() const
 {
 	return m_parentItem;
 }
@@ -78,4 +77,5 @@ int MusicLibraryItemArtist::row() const
 void MusicLibraryItemArtist::clearChildren()
 {
 	qDeleteAll(m_childItems);
+	m_childItems.clear();
 }

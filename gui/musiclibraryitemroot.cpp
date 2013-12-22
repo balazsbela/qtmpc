@@ -48,7 +48,7 @@ void MusicLibraryItemRoot::insertChild(MusicLibraryItem * const child, const int
 	m_childItems.insert(place, static_cast<MusicLibraryItemArtist *>(child));
 }
 
-MusicLibraryItem * const MusicLibraryItemRoot::child(int row) const
+MusicLibraryItem * MusicLibraryItemRoot::child(int row) const
 {
 	return m_childItems.value(row);
 }

@@ -22,13 +22,19 @@
 
 #include <QSortFilterProxyModel>
 
+class DirViewItem;
+
 class DirViewProxyModel : public QSortFilterProxyModel
 {
 	Q_OBJECT
 
 	public:
 		DirViewProxyModel(QObject *parent = 0);
+		bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;
 		bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
+
+	private:
+		bool filterAcceptsDirViewItem(const DirViewItem * const item, bool first) const;
 };
 
 #endif

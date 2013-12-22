@@ -46,13 +46,13 @@ class MusicLibraryModel : public QAbstractItemModel
 		int rowCount(const QModelIndex &parent = QModelIndex()) const;
 		int columnCount(const QModelIndex &) const;
 		QVariant data(const QModelIndex &, int) const;
-		bool fromXML(const QDateTime db_update);
-
 		Qt::ItemFlags flags(const QModelIndex &index) const;
 		QMimeData *mimeData(const QModelIndexList &indexes) const;
 
+		bool fromXML(const QDateTime db_update);
+
 	public slots:
-		void updateLibrary(QList<MusicLibraryItemArtist *> *items, QDateTime db_update = QDateTime(), bool fromFile = false);
+		void updateMusicLibrary(MusicLibraryItemRoot * root, QDateTime db_update = QDateTime(), bool fromFile = false);
 
 	signals:
 		void xmlWritten(QDateTime db_update);
@@ -63,6 +63,8 @@ class MusicLibraryModel : public QAbstractItemModel
 		QStringList sortAlbumTracks(const MusicLibraryItemAlbum *album) const;
 
 		void toXML(const QDateTime db_update);
+		QMutex libraryMutex;
+		QDateTime databaseTime;
 };
 
 #endif

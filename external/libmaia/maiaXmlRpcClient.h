@@ -35,10 +35,9 @@
 
 #include "maiaObject.h"
 
-class MaiaXmlRpcClient : public QObject
-{
+class MaiaXmlRpcClient : public QObject {
 	Q_OBJECT
-
+	
 	public:
 		MaiaXmlRpcClient(QObject* parent = 0);
 		MaiaXmlRpcClient(QUrl url, QObject* parent = 0);
@@ -46,14 +45,15 @@ class MaiaXmlRpcClient : public QObject
 		void call(QString method, QList<QVariant> args,
 			 QObject* responseObject, const char* responseSlot,
 			 QObject* faultObject, const char* faultSlot);
-
+	
 	private slots:
 		void httpRequestDone(int id, bool error);
-
+                void responseHeaderReceived(QHttpResponseHeader header);
 	private:
 		QUrl m_url;
-		QHttp http;
+		QHttp *http;
 		QMap<int, MaiaObject*> callmap;
+                QString cookie;
 };
 
 #endif

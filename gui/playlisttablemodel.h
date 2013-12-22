@@ -24,6 +24,7 @@
 #include <QAbstractTableModel>
 #include <QList>
 #include <QStringList>
+#include <QSet>
 
 #include "lib/song.h"
 
@@ -41,32 +42,32 @@ class PlaylistTableModel : public QAbstractTableModel
 		void updateCurrentSong(quint32 id);
 		qint32 getIdByRow(qint32 row) const;
 		qint32 getPosByRow(qint32 row) const;
+		qint32 getRowById(qint32 id) const;
+		Song * getSongByRow(const qint32 row) const;
 
 		Qt::DropActions supportedDropActions() const;
 		Qt::ItemFlags flags(const QModelIndex &index) const;
 		QStringList mimeTypes() const;
 		QMimeData *mimeData(const QModelIndexList &indexes) const;
 		bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
+		
+		QSet<qint32> getSongIdSet();
 
 		void playListStats();
 
 	public slots:
-		void updateSongs(QList<Song *> *);
+		void updatePlaylist(QList<Song *> *);
 
 	signals:
 		void filesAddedInPlaylist(const QStringList filenames, const int row, const int size);
-		void moveInPlaylist(const QList<quint32> items, const quint32 diff, const int max);
+		void moveInPlaylist(const QList<quint32> items, const int row, const int size);
 		void playListStatsUpdated();
 
 	private:
 		QList<Song *> songs;
-		qint32 song_id;
-		qint32 lastClickedRow;
+		qint32 song_id;		
 
-		qint32 songIdToRow(qint32 id) const;
-
-	private slots:
-		void clicked(const QModelIndex & index);
+	private slots:		
 		void playListReset();
 };
 

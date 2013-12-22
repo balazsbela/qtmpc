@@ -33,7 +33,7 @@ class DirViewItemFile : public DirViewItem
 		~DirViewItemFile();
 
 		int row() const;
-		DirViewItem * const parent() const;
+		DirViewItem * parent() const;
 		QString fileName();
 
 	private:

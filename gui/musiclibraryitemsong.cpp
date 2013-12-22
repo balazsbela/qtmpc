@@ -34,7 +34,7 @@ MusicLibraryItemSong::~MusicLibraryItemSong()
 {
 }
 
-MusicLibraryItem * const MusicLibraryItemSong::parent() const
+MusicLibraryItem * MusicLibraryItemSong::parent() const
 {
 	return m_parentItem;
 }

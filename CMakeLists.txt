@@ -8,6 +8,7 @@ SET( QTMPC_SRCS
 	main.cpp
 	gui/main_window.cpp
 	gui/main_window_playlist.cpp
+	gui/main_window_playlists.cpp
 	gui/main_window_trayicon.cpp
 	gui/musiclibraryitem.cpp
 	gui/musiclibraryitemroot.cpp
@@ -15,8 +16,11 @@ SET( QTMPC_SRCS
 	gui/musiclibraryitemalbum.cpp
 	gui/musiclibraryitemsong.cpp
 	gui/musiclibrarymodel.cpp
-	gui/musiclibrarysortfiltermodel.cpp
+	gui/musiclibraryproxymodel.cpp
+	gui/playlistsmodel.cpp
+	gui/playlistsproxymodel.cpp
 	gui/playlisttablemodel.cpp
+	gui/playlisttableproxymodel.cpp
 	gui/preferences_dialog.cpp
 	gui/statistics_dialog.cpp
 	gui/dirviewmodel.cpp
@@ -26,32 +30,41 @@ SET( QTMPC_SRCS
 	gui/dirviewitemdir.cpp
 	gui/dirviewitemroot.cpp
 	lib/lastfm_metadata_fetcher.cpp
-	lib/lastfm_scrobbling.cpp
-	lib/mpdconnection.cpp
+	lib/mpdconnectionbase.cpp
+	lib/mpdconnectionplayback.cpp
 	lib/mpddatabaseconnection.cpp
+	lib/mpderror.cpp
 	lib/mpdparseutils.cpp
+	lib/mpdplaylistsconnection.cpp
 	lib/mpdstats.cpp
 	lib/mpdstatus.cpp
+	lib/output.cpp
+	lib/playlist.cpp
 	lib/song.cpp
-	external/synchttp/synchttp.cpp
 )
 
 SET( QTMPC_MOC_HDRS
 	gui/main_window.h
 	gui/musiclibrarymodel.h
-	gui/musiclibrarysortfiltermodel.h
+	gui/musiclibraryproxymodel.h
+	gui/playlistsmodel.h
+	gui/playlistsproxymodel.h
 	gui/playlisttablemodel.h
+	gui/playlisttableproxymodel.h
 	gui/about_dialog.h
 	gui/preferences_dialog.h
 	gui/statistics_dialog.h
 	gui/dirviewmodel.h
 	gui/dirviewproxymodel.h
 	lib/lastfm_metadata_fetcher.h
-	lib/lastfm_scrobbling.h
-	lib/mpdconnection.h
+	lib/mpdconnectionbase.h
+	lib/mpdconnectionplayback.h
 	lib/mpddatabaseconnection.h
+	lib/mpderror.h
+	lib/mpdplaylistsconnection.h
+	lib/output.h
+	lib/playlist.h
 	lib/song.h
-	external/synchttp/synchttp.h
 )
 
 SET( QTMPC_UIS
@@ -175,3 +188,7 @@ IF( ENABLE_KDE_SUPPORT )
 	install( FILES QtMPC.notifyrc DESTINATION ${DATA_INSTALL_DIR}/QtMPC )
 	KDE4_INSTALL_ICONS( ${ICON_INSTALL_DIR} )
 ENDIF( ENABLE_KDE_SUPPORT )
+
+IF( UNIX AND NOT APPLE )
+	install(FILES QtMPC.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
+ENDIF( UNIX AND NOT APPLE )

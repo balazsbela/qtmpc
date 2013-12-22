@@ -43,23 +43,6 @@ bool MainWindow::setupTrayIcon()
 	trayIcon->installEventFilter(volumeSliderEventHandler);
 	trayIconMenu = new QMenu(this);
 
-	//Setup Actions
-	playPauseAction = new QAction(tr("&Play"), trayIconMenu);
-	playPauseAction->setIcon(playbackPlay);
-	connect(playPauseAction, SIGNAL(triggered()), this, SLOT(playPauseTrack()));
-
-	stopAction = new QAction(tr("&Stop"), trayIconMenu);
-	stopAction->setIcon(playbackStop);
-	connect(stopAction, SIGNAL(triggered()), this, SLOT(stopTrack()));
-
-	prevAction = new QAction(tr("P&rev"), trayIconMenu);
-	prevAction->setIcon(playbackPrev);
-	connect(prevAction, SIGNAL(triggered()), this, SLOT(previousTrack()));
-
-	nextAction = new QAction(tr("&Next"), trayIconMenu);
-	nextAction->setIcon(playbackNext);
-	connect(nextAction, SIGNAL(triggered()), this, SLOT(nextTrack()));
-
 #ifdef ENABLE_KDE_SUPPORT
 	quitAction = KStandardAction::quit(kapp, SLOT(quit()), trayIconMenu);
 #else
@@ -70,10 +53,10 @@ bool MainWindow::setupTrayIcon()
 	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayIconClicked(QSystemTrayIcon::ActivationReason)));
 
 	//Setup Menu
-	trayIconMenu->addAction(prevAction);
-	trayIconMenu->addAction(nextAction);
-	trayIconMenu->addAction(stopAction);
-	trayIconMenu->addAction(playPauseAction);
+	trayIconMenu->addAction(action_Prev_track);
+	trayIconMenu->addAction(action_Next_track);
+	trayIconMenu->addAction(action_Stop_track);
+	trayIconMenu->addAction(action_Play_pause_track);
 	trayIconMenu->addSeparator();
 	trayIconMenu->addAction(quitAction);
 
@@ -94,6 +77,16 @@ void MainWindow::trayIconClicked(QSystemTrayIcon::ActivationReason reason)
 		case QSystemTrayIcon::Trigger:
 			if (isHidden()) {
 				showNormal();
+				/*
+				 * Restore size and position of GUI
+				 * If we have a config variable for them
+				 */
+				if (settings.contains("size")) {
+					resize(settings.value("size").toSize());
+				}
+				if (settings.contains("position")) {
+					move(settings.value("position").toPoint());
+				}
 			} else {
 				hide();
 			}

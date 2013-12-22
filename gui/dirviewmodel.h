@@ -39,12 +39,15 @@ class dirViewModel : public QAbstractItemModel
 		int rowCount(const QModelIndex &parent = QModelIndex()) const;
 		int columnCount(const QModelIndex &) const;
 		QVariant data(const QModelIndex &, int) const;
+                Qt::ItemFlags flags(const QModelIndex &index) const;
+                QMimeData *mimeData(const QModelIndexList &indexes) const;
 
 	public slots:
-		void dirViewUpdated(DirViewItemRoot *newroot);
+		void updateDirView(DirViewItemRoot *newroot);
 
 	private:
 		const DirViewItemRoot *rootItem;
+                void recurseDirItems(DirViewItem &parent, QStringList &filenames) const;
 };
 
 #endif

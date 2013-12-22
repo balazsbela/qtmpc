@@ -28,13 +28,12 @@
 
 #include "maiaObject.h"
 
-MaiaObject::MaiaObject(QObject* parent) : QObject(parent)
-{
+MaiaObject::MaiaObject(QObject* parent) : QObject(parent){
 	QDomImplementation::setInvalidDataPolicy(QDomImplementation::DropInvalidChars);
 }
 
-QDomElement MaiaObject::toXml(QVariant arg)
-{
+QDomElement MaiaObject::toXml(QVariant arg) {
+	
 	//dummy document
 	QDomDocument doc;
 	//value element, we need this in each case
@@ -43,9 +42,9 @@ QDomElement MaiaObject::toXml(QVariant arg)
 	switch(arg.type()) {
 	case QVariant::String: {
 
-		QDomElement tagString = doc.createElement("string");
+		QDomElement tagString = doc.createElement("string"); 
 		QDomText textString = doc.createTextNode(arg.toString());
-
+		
 		tagValue.appendChild(tagString);
 		tagString.appendChild(textString);
 
@@ -53,9 +52,9 @@ QDomElement MaiaObject::toXml(QVariant arg)
 
 	} case QVariant::Int: {
 
-		QDomElement tagInt = doc.createElement("int");
+		QDomElement tagInt = doc.createElement("int"); 
 		QDomText textInt = doc.createTextNode(QString::number(arg.toInt()));
-
+		
 		tagValue.appendChild(tagInt);
 		tagInt.appendChild(textInt);
 
@@ -63,21 +62,21 @@ QDomElement MaiaObject::toXml(QVariant arg)
 
 	} case QVariant::Double: {
 
-		QDomElement tagDouble = doc.createElement("double");
+		QDomElement tagDouble = doc.createElement("double"); 
 		QDomText textDouble = doc.createTextNode(QString::number(arg.toDouble()));
-
+		
 		tagValue.appendChild(tagDouble);
 		tagDouble.appendChild(textDouble);
 
 		return tagValue;
 
 	} case QVariant::Bool: {
+	
+		QString textValue = arg.toBool() ? "true" : "false";
 
-		QString textValue = arg.toBool() ? "1" : "0";
-
-		QDomElement tag = doc.createElement("boolean");
+		QDomElement tag = doc.createElement("boolean"); 
 		QDomText text = doc.createTextNode(textValue);
-
+		
 		tagValue.appendChild(tag);
 		tag.appendChild(text);
 
@@ -87,21 +86,21 @@ QDomElement MaiaObject::toXml(QVariant arg)
 
 		QString textValue = arg.toByteArray().toBase64();
 
-		QDomElement tag = doc.createElement("base64");
+		QDomElement tag = doc.createElement("base64"); 
 		QDomText text = doc.createTextNode(textValue);
-
+		
 		tagValue.appendChild(tag);
 		tag.appendChild(text);
 
 		return tagValue;
 
 	} case QVariant::DateTime: {
-
+	
 		QString textValue = arg.toDateTime().toString("yyyyMMddThh:mm:ss");
 
-		QDomElement tag = doc.createElement("datetime.iso8601");
+		QDomElement tag = doc.createElement("datetime.iso8601"); 
 		QDomText text = doc.createTextNode(textValue);
-
+		
 		tagValue.appendChild(tag);
 		tag.appendChild(text);
 
@@ -118,7 +117,7 @@ QDomElement MaiaObject::toXml(QVariant arg)
 		for(int i = 0; i < args.size(); ++i) {
 			tagData.appendChild(toXml(args.at(i)));
 		}
-
+	
 		return tagValue;
 
 	} case QVariant::Map: {
@@ -154,12 +153,12 @@ QDomElement MaiaObject::toXml(QVariant arg)
 	return QDomElement(); //QString::null;
 }
 
-QVariant MaiaObject::fromXml(const QDomElement &elem)
-{
-	if(elem.tagName().toLower() != "value")
+QVariant MaiaObject::fromXml(const QDomElement &elem) {
+	if(elem.tagName().toLower() != "value") {
 		return QVariant();
-
-	const QDomElement typeElement = elem.firstChild().toElement();
+	}
+	
+	const QDomElement typeElement = elem.firstChild().toElement();	
 	const QString typeName = typeElement.tagName().toLower();
 
 	if(typeName == "string")
@@ -202,13 +201,15 @@ QVariant MaiaObject::fromXml(const QDomElement &elem)
 	return QVariant();
 }
 
-QString MaiaObject::prepareCall(QString method, QList<QVariant> args)
-{
+
+QString MaiaObject::prepareCall(QString method, QList<QVariant> args) {
+	
+
 	QDomDocument doc;
 
 	QDomProcessingInstruction header = doc.createProcessingInstruction( "xml", QString("version=\"1.0\" encoding=\"UTF-8\"" ));
 	doc.appendChild(header);
-
+	
 	QDomElement methodCall = doc.createElement("methodCall");
 	QDomElement methodName = doc.createElement("methodName");
 	QDomElement params = doc.createElement("params");
@@ -229,13 +230,13 @@ QString MaiaObject::prepareCall(QString method, QList<QVariant> args)
 	return doc.toString();
 }
 
-QString MaiaObject::prepareResponse(QVariant arg)
-{
+QString MaiaObject::prepareResponse(QVariant arg) {
+
 	QDomDocument doc;
 
-	QDomProcessingInstruction header = doc.createProcessingInstruction( "xml", QString("version=\"1.0\" encoding=\"UTF-8\"" ));
+	QDomProcessingInstruction header = doc.createProcessingInstruction( "xml", QString("version=\"1.0\" encoding=\"UTF-8\"" )); 
 	doc.appendChild(header);
-
+	
 	QDomElement methodResponse = doc.createElement("methodResponse");
 	QDomElement params = doc.createElement("params");
 	QDomElement param;
@@ -249,15 +250,12 @@ QString MaiaObject::prepareResponse(QVariant arg)
 		param.appendChild(toXml(arg));
 		params.appendChild(param);
 	}
-
 	return doc.toString();
 }
 
-void MaiaObject::parseResponse(QString response)
-{
+void MaiaObject::parseResponse(QString response) {
 	QDomDocument doc;
 	QVariant arg;
-
 	if(!doc.setContent(response)) {
 		emit fault(-32700, tr("parse error: response not well formed."));
 		delete this;
@@ -279,3 +277,4 @@ void MaiaObject::parseResponse(QString response)
 	delete this;
 	return;
 }
+

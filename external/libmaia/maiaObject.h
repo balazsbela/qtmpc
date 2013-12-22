@@ -32,24 +32,24 @@
 #include <QtCore>
 #include <QtXml>
 
-class MaiaObject : public QObject
-{
+class MaiaObject : public QObject {
 	Q_OBJECT
-
+	
 	public:
 		MaiaObject(QObject* parent = 0);
 		static QDomElement toXml(QVariant arg);
 		static QVariant fromXml(const QDomElement &elem);
 		QString prepareCall(QString method, QList<QVariant> args);
 		static QString prepareResponse(QVariant arg);
-
+		
 	public slots:
 		void parseResponse(QString response);
-
+	
 	signals:
 		void aresponse(QVariant &);
 		void call(const QString, const QList<QVariant>);
 		void fault(int, const QString &);
+		
 };
 
 #endif

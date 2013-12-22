@@ -37,7 +37,7 @@ class DirViewItemRoot : public DirViewItem
 		DirViewItem * insertFile(const QString fileName);
 
 		int childCount() const;
-		DirViewItem * const child(int row) const;
+		DirViewItem * child(int row) const;
 
 	private:
 		QList<DirViewItem *> d_childItems;

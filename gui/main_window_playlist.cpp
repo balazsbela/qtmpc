@@ -24,11 +24,27 @@
 #include <QString>
 #include <QKeyEvent>
 #include <QHeaderView>
+#include <QSet>
 
 #include "main_window.h"
 
 void MainWindow::setupPlaylistViewMenu()
 {
+	/*
+	 * Setup shuffleMenu
+	 */
+	action_Shuffle_entire_playlist = new QAction(tr("Playlist"), this);
+	action_Shuffle_playlist_selection = new QAction(tr("Selection"), this);
+
+	QMenu *shuffleMenu = new QMenu(this);
+	shuffleMenu->addAction(action_Shuffle_entire_playlist);
+	shuffleMenu->addAction(action_Shuffle_playlist_selection);
+	shufflePlaylistPushButton->setMenu(shuffleMenu);
+	
+	connect(shuffleMenu, SIGNAL(aboutToShow()), this, SLOT(prepareShuffleMenu()));
+	connect(action_Shuffle_entire_playlist, SIGNAL(triggered()), &mpd, SLOT(shuffle()));
+	connect(action_Shuffle_playlist_selection, SIGNAL(triggered()), this, SLOT(shuffleSelection()));
+	
 	QSettings settings;
 
 	playlistTableViewMenu = new QMenu(this);
@@ -51,6 +67,9 @@ void MainWindow::setupPlaylistViewMenu()
 	discPlaylistViewAction = new QAction(tr("Disc"), playlistTableViewMenu);
 	discPlaylistViewAction->setCheckable(true);
 	discPlaylistViewAction->setChecked(true);
+	yearPlaylistViewAction = new QAction(tr("Year"), playlistTableViewMenu);
+	yearPlaylistViewAction->setCheckable(true);
+	yearPlaylistViewAction->setChecked(true);
 
 	playlistTableViewMenu->addAction(albumPlaylistViewAction);
 	playlistTableViewMenu->addAction(artistPlaylistViewAction);
@@ -58,6 +77,7 @@ void MainWindow::setupPlaylistViewMenu()
 	playlistTableViewMenu->addAction(timePlaylistViewAction);
 	playlistTableViewMenu->addAction(trackPlaylistViewAction);
 	playlistTableViewMenu->addAction(discPlaylistViewAction);
+	playlistTableViewMenu->addAction(yearPlaylistViewAction);
 
 	//Restore state
 	QByteArray state = settings.value("playlistTableViewHeader").toByteArray();
@@ -133,6 +153,16 @@ void MainWindow::setupPlaylistViewMenu()
 				discPlaylistViewAction->setDisabled(true);
 			}
 		}
+		if (playlistTableViewHeader->isSectionHidden(6) ||
+			playlistTableViewHeader->sectionSize(6) == 0) {
+			yearPlaylistViewAction->setChecked(false);
+			playlistTableViewHeader->setSectionHidden(6, true);
+			playlistTableViewHeader->resizeSection(6, 100);
+		} else {
+			if (hidden == 6) {
+				yearPlaylistViewAction->setDisabled(true);
+			}
+		}
 	}
 
 	connect(albumPlaylistViewAction, SIGNAL(toggled(bool)), this, SLOT(playListTableViewToggleAlbum(bool)));
@@ -141,6 +171,7 @@ void MainWindow::setupPlaylistViewMenu()
 	connect(trackPlaylistViewAction, SIGNAL(toggled(bool)), this, SLOT(playListTableViewToggleTrack(bool)));
 	connect(titlePlaylistViewAction, SIGNAL(toggled(bool)), this, SLOT(playListTableViewToggleTitle(bool)));
 	connect(discPlaylistViewAction, SIGNAL(toggled(bool)), this, SLOT(playListTableViewToggleDisc(bool)));
+	connect(yearPlaylistViewAction, SIGNAL(toggled(bool)), this, SLOT(playListTableViewToggleYear(bool)));
 }
 
 void MainWindow::setupPlaylistViewHeader() {
@@ -169,6 +200,7 @@ void MainWindow::playListTableViewToggleAlbum(const bool visible)
 		timePlaylistViewAction->setEnabled(true);
 		trackPlaylistViewAction->setEnabled(true);
 		discPlaylistViewAction->setEnabled(true);
+		yearPlaylistViewAction->setEnabled(true);
 	} else {
 		if (playlistTableViewHeader->hiddenSectionCount() == 4) {
 			if (artistPlaylistViewAction->isChecked())
@@ -181,6 +213,8 @@ void MainWindow::playListTableViewToggleAlbum(const bool visible)
 				trackPlaylistViewAction->setDisabled(true);
 			if (discPlaylistViewAction->isChecked())
 				discPlaylistViewAction->setDisabled(true);
+			if (yearPlaylistViewAction->isChecked())
+				yearPlaylistViewAction->setDisabled(true);
 		}
 	}
 
@@ -196,6 +230,7 @@ void MainWindow::playListTableViewToggleArtist(const bool visible)
 		timePlaylistViewAction->setEnabled(true);
 		trackPlaylistViewAction->setEnabled(true);
 		discPlaylistViewAction->setEnabled(true);
+                yearPlaylistViewAction->setEnabled(true);
 	} else {
 		if (playlistTableViewHeader->hiddenSectionCount() == 4) {
 			if (albumPlaylistViewAction->isChecked())
@@ -208,6 +243,8 @@ void MainWindow::playListTableViewToggleArtist(const bool visible)
 				trackPlaylistViewAction->setDisabled(true);
 			if (discPlaylistViewAction->isChecked())
 				discPlaylistViewAction->setDisabled(true);
+			if (yearPlaylistViewAction->isChecked())
+				yearPlaylistViewAction->setDisabled(true);
 		}
 	}
 
@@ -223,6 +260,7 @@ void MainWindow::playListTableViewToggleTime(const bool visible)
 		timePlaylistViewAction->setEnabled(true);
 		trackPlaylistViewAction->setEnabled(true);
 		discPlaylistViewAction->setEnabled(true);
+                yearPlaylistViewAction->setEnabled(true);
 	} else {
 		if (playlistTableViewHeader->hiddenSectionCount() == 4) {
 			if (artistPlaylistViewAction->isChecked())
@@ -235,6 +273,8 @@ void MainWindow::playListTableViewToggleTime(const bool visible)
 				trackPlaylistViewAction->setDisabled(true);
 			if (discPlaylistViewAction->isChecked())
 				discPlaylistViewAction->setDisabled(true);
+			if (yearPlaylistViewAction->isChecked())
+				yearPlaylistViewAction->setDisabled(true);
 		}
 	}
 
@@ -250,6 +290,7 @@ void MainWindow::playListTableViewToggleTrack(const bool visible)
 		timePlaylistViewAction->setEnabled(true);
 		trackPlaylistViewAction->setEnabled(true);
 		discPlaylistViewAction->setEnabled(true);
+                yearPlaylistViewAction->setEnabled(true);
 	} else {
 		if (playlistTableViewHeader->hiddenSectionCount() == 4) {
 			if (artistPlaylistViewAction->isChecked())
@@ -262,6 +303,8 @@ void MainWindow::playListTableViewToggleTrack(const bool visible)
 				albumPlaylistViewAction->setDisabled(true);
 			if (discPlaylistViewAction->isChecked())
 				discPlaylistViewAction->setDisabled(true);
+			if (yearPlaylistViewAction->isChecked())
+				yearPlaylistViewAction->setDisabled(true);
 		}
 	}
 
@@ -277,6 +320,7 @@ void MainWindow::playListTableViewToggleTitle(const bool visible)
 		timePlaylistViewAction->setEnabled(true);
 		trackPlaylistViewAction->setEnabled(true);
 		discPlaylistViewAction->setEnabled(true);
+                yearPlaylistViewAction->setEnabled(true);
 	} else {
 		if (playlistTableViewHeader->hiddenSectionCount() == 4) {
 			if (artistPlaylistViewAction->isChecked())
@@ -289,6 +333,8 @@ void MainWindow::playListTableViewToggleTitle(const bool visible)
 				trackPlaylistViewAction->setDisabled(true);
 			if (discPlaylistViewAction->isChecked())
 				discPlaylistViewAction->setDisabled(true);
+			if (yearPlaylistViewAction->isChecked())
+				yearPlaylistViewAction->setDisabled(true);
 		}
 	}
 
@@ -304,6 +350,7 @@ void MainWindow::playListTableViewToggleDisc(const bool visible)
 		timePlaylistViewAction->setEnabled(true);
 		trackPlaylistViewAction->setEnabled(true);
 		discPlaylistViewAction->setEnabled(true);
+                yearPlaylistViewAction->setEnabled(true);
 	} else {
 		if (playlistTableViewHeader->hiddenSectionCount() == 4) {
 			if (artistPlaylistViewAction->isChecked())
@@ -316,14 +363,142 @@ void MainWindow::playListTableViewToggleDisc(const bool visible)
 				trackPlaylistViewAction->setDisabled(true);
 			if (titlePlaylistViewAction->isChecked())
 				titlePlaylistViewAction->setDisabled(true);
+			if (yearPlaylistViewAction->isChecked())
+				yearPlaylistViewAction->setDisabled(true);
 		}
 	}
 	
 	playlistTableViewHeader->setSectionHidden(5, !visible);
 }
 
+void MainWindow::playListTableViewToggleYear(const bool visible)
+{
+	if (visible) {
+		albumPlaylistViewAction->setEnabled(true);
+		artistPlaylistViewAction->setEnabled(true);
+		titlePlaylistViewAction->setEnabled(true);
+		timePlaylistViewAction->setEnabled(true);
+		trackPlaylistViewAction->setEnabled(true);
+		discPlaylistViewAction->setEnabled(true);
+		yearPlaylistViewAction->setEnabled(true);
+	} else {
+		if (playlistTableViewHeader->hiddenSectionCount() == 4) {
+			if (artistPlaylistViewAction->isChecked())
+				artistPlaylistViewAction->setDisabled(true);
+			if (albumPlaylistViewAction->isChecked())
+				albumPlaylistViewAction->setDisabled(true);
+			if (timePlaylistViewAction->isChecked())
+				timePlaylistViewAction->setDisabled(true);
+			if (trackPlaylistViewAction->isChecked())
+				trackPlaylistViewAction->setDisabled(true);
+			if (titlePlaylistViewAction->isChecked())
+				titlePlaylistViewAction->setDisabled(true);
+			if (discPlaylistViewAction->isChecked())
+				titlePlaylistViewAction->setDisabled(true);
+		}
+	}
+
+	playlistTableViewHeader->setSectionHidden(6, !visible);
+}
+
 void MainWindow::playListTableViewSaveState()
 {
 	QSettings settings;
 	settings.setValue("playlistTableViewHeader", playlistTableViewHeader->saveState());
+}
+
+void MainWindow::prepareShuffleMenu()
+{
+	const QModelIndexList items = playlistTableView->selectionModel()->selectedRows();
+	QModelIndex sourceIndex;
+	quint32 first_id;
+	quint32 last_id;
+
+	/*
+	 * We can't shuffle a selection if there is no selection
+	 */
+	if(items.isEmpty()) {
+		action_Shuffle_playlist_selection->setEnabled(false);
+		return;
+	}
+
+	sourceIndex = playlistProxyModel.mapToSource(items.at(0));
+	first_id = sourceIndex.row();
+	last_id = sourceIndex.row();
+
+	for(int i = 1; i < items.size(); i++) {
+		sourceIndex = playlistProxyModel.mapToSource(items.at(i));
+		quint32 cur_id = sourceIndex.row();
+		
+		first_id = first_id < cur_id ? first_id : cur_id;
+		last_id = last_id > cur_id ? last_id : cur_id;
+	}
+
+	/*
+	 * Check if the selection is a range
+	 */
+	if ( ((last_id - first_id) + 1) == (quint32)items.size()) {
+		action_Shuffle_playlist_selection->setEnabled(true);
+	} else {
+		action_Shuffle_playlist_selection->setEnabled(false);
+	}
+}
+
+void MainWindow::shuffleSelection()
+{
+	const QModelIndexList items = playlistTableView->selectionModel()->selectedRows();
+	QModelIndex sourceIndex;
+	quint32 first_id;
+	quint32 last_id;
+
+	/*
+	 * We can't shuffle a selection if there is no selection
+	 */
+	if(items.isEmpty()) {
+		return;
+	}
+
+	sourceIndex = playlistProxyModel.mapToSource(items.at(0));
+	first_id = sourceIndex.row();
+	last_id = sourceIndex.row();
+
+	for(int i = 1; i < items.size(); i++) {
+		quint32 cur_id = playlistProxyModel.mapToSource(items.at(i)).row();
+
+		first_id = first_id < cur_id ? first_id : cur_id;
+		last_id = last_id > cur_id ? last_id : cur_id;
+	}
+
+	/*
+	 * Check if the selection is a range
+	 */
+	if ( ((last_id - first_id) + 1) == (quint32)items.size()) {
+		mpd.shuffle(first_id, last_id);
+	} 
+}
+
+/*
+ * Crop playlist
+ * Do this by taking the set off all song id's and subtracting from that
+ * the set of selected song id's. Feed that list to mpd.removeSongs
+ */
+void MainWindow::cropPlaylist()
+{
+	QSet<qint32> songs = playlistModel.getSongIdSet();
+	QSet<qint32> selected;
+	
+	const QModelIndexList items = playlistTableView->selectionModel()->selectedRows();
+	QModelIndex sourceIndex;
+
+	if(items.isEmpty())
+		return;
+
+	for(int i = 0; i < items.size(); i++) {
+		sourceIndex = playlistProxyModel.mapToSource(items.at(i));
+		selected << playlistModel.getIdByRow(sourceIndex.row());
+	}
+	
+	QList<qint32> toBeRemoved = (songs - selected).toList();
+
+	mpd.removeSongs(toBeRemoved);
 }

@@ -37,7 +37,7 @@ class MusicLibraryItemRoot : public MusicLibraryItem
 		void appendChild(MusicLibraryItem * const child);
 		void insertChild(MusicLibraryItem * const child, const int place);
 
-		MusicLibraryItem * const child(int row) const;
+		MusicLibraryItem * child(int row) const;
 		int childCount() const;
 		void clearChildren();
 

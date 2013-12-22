@@ -21,6 +21,7 @@
 #include "mpdstatus.h"
 
 quint8 MPDStatus::m_volume = 0;
+bool MPDStatus::m_consume = false;
 bool MPDStatus::m_repeat = false;
 bool MPDStatus::m_random = false;
 quint32 MPDStatus::m_playlist = 0;
@@ -63,6 +64,14 @@ quint8 MPDStatus::volume()
 	quint8 volume = m_volume;
 	m_lock.unlock();
 	return volume;
+}
+
+bool MPDStatus::consume()
+{
+	m_lock.lockForRead();
+	bool consume = m_consume;
+	m_lock.unlock();
+	return consume;
 }
 
 bool MPDStatus::repeat()
@@ -205,6 +214,11 @@ QString MPDStatus::error()
 void MPDStatus::setVolume(quint8 volume)
 {
 	m_volume = volume;
+}
+
+void MPDStatus::setConsume(bool consume)
+{
+	m_consume = consume;
 }
 
 void MPDStatus::setRepeat(bool repeat)

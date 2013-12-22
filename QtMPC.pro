@@ -19,8 +19,11 @@ HEADERS += external/libmaia/maiaObject.h \
 		gui/musiclibraryitemalbum.h \
 		gui/musiclibraryitemsong.h \
 		gui/musiclibrarymodel.h \
-		gui/musiclibrarysortfiltermodel.h \
+		gui/musiclibraryproxymodel.h \
+		gui/playlistsmodel.h \
+		gui/playlistsproxymodel.h \
 		gui/playlisttablemodel.h \
+		gui/playlisttableproxymodel.h \
 		gui/about_dialog.h \
 		gui/preferences_dialog.h \
 		gui/statistics_dialog.h \
@@ -31,14 +34,17 @@ HEADERS += external/libmaia/maiaObject.h \
 		gui/dirviewitemfile.h \
 		gui/dirviewitemroot.h \
 		lib/lastfm_metadata_fetcher.h \
-		lib/lastfm_scrobbling.h \
-		lib/mpdconnection.h \
+		lib/mpdconnectionbase.h \
+		lib/mpdconnectionplayback.h \
 		lib/mpddatabaseconnection.h \
+		lib/mpderror.h \
 		lib/mpdparseutils.h \
+		lib/mpdplaylistsconnection.h \
 		lib/mpdstats.h \
 		lib/mpdstatus.h \
+		lib/output.h \
+		lib/playlist.h \
 		lib/song.h \
-		external/synchttp/synchttp.h \
 		QtMPC_config.h
 
 FORMS += gui/main_window.ui \
@@ -52,6 +58,7 @@ SOURCES += main.cpp \
 		external/libmaia/maiaXmlRpcClient.cpp \
 		gui/main_window.cpp \
 		gui/main_window_playlist.cpp \
+		gui/main_window_playlists.cpp \
 		gui/main_window_trayicon.cpp \
 		gui/musiclibraryitem.cpp \
 		gui/musiclibraryitemroot.cpp \
@@ -59,8 +66,11 @@ SOURCES += main.cpp \
 		gui/musiclibraryitemalbum.cpp \
 		gui/musiclibraryitemsong.cpp \
 		gui/musiclibrarymodel.cpp \
-		gui/musiclibrarysortfiltermodel.cpp \
+		gui/musiclibraryproxymodel.cpp \
+		gui/playlistsmodel.cpp \
+		gui/playlistsproxymodel.cpp \
 		gui/playlisttablemodel.cpp \
+		gui/playlisttableproxymodel.cpp \
 		gui/about_dialog.cpp \
 		gui/preferences_dialog.cpp \
 		gui/statistics_dialog.cpp \
@@ -71,14 +81,14 @@ SOURCES += main.cpp \
 		gui/dirviewitemdir.cpp \
 		gui/dirviewitemroot.cpp \
 		lib/lastfm_metadata_fetcher.cpp \
-		lib/lastfm_scrobbling.cpp \
-		lib/mpdconnection.cpp \
+		lib/mpdconnectionbase.cpp \
+		lib/mpdconnectionplayback.cpp \
 		lib/mpddatabaseconnection.cpp \
+		lib/mpderror.cpp \
 		lib/mpdparseutils.cpp \
+		lib/mpdplaylistsconnection.cpp \
 		lib/mpdstats.cpp \
 		lib/mpdstatus.cpp \
-		lib/song.cpp \
-		external/synchttp/synchttp.cpp
-
-OTHER_FILES += \
-    qhttp.pri
+		lib/output.cpp \
+		lib/playlist.cpp \
+		lib/song.cpp

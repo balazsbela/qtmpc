@@ -26,18 +26,23 @@
 
 class MusicLibraryItemArtist;
 class Song;
+class Playlist;
 class DirViewItemRoot;
+class MusicLibraryItemRoot;
+class Output;
 
 class MPDParseUtils
 {
 	public:
+		static QList<Playlist *> * parsePlaylists(const QByteArray * const data);
 		static void parseStats(const QByteArray * const data);
 		static void parseStatus(const QByteArray * const data);
 		static Song * parseSong(const QByteArray * const data);
 		static QList<Song *> * parseSongs(const QByteArray * const data);
-		static QList<MusicLibraryItemArtist *> * parseLibraryItems(const QByteArray * const data);
+		static MusicLibraryItemRoot * parseLibraryItems(const QByteArray * const data);
 		static DirViewItemRoot * parseDirViewItems(const QByteArray * const data);
 		static QString seconds2formattedString(const quint32 totalseconds);
+		static QList<Output *> parseOuputs(const QByteArray * const data);
 };
 
 #endif

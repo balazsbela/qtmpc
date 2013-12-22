@@ -62,6 +62,13 @@ void LastFmMetadataFetcher::setFetchCover(bool fetch)
 
 void LastFmMetadataFetcher::AlbumInfo()
 {
+	if (_artist == NULL || _title == NULL || _artist.isEmpty() || _title.isEmpty()) {
+		if (_cover) {
+			emit coverImage(QImage(), QString(), QString());
+			return;
+		}
+	}
+
 	QVariantList args;
 	QMap<QString, QVariant> mapped_args;
 
@@ -82,8 +89,8 @@ void LastFmMetadataFetcher::TrackInfo()
 	QVariantList args;
 	QMap<QString, QVariant> mapped_args;
 
-	if (_artist == "" || _track == "")
-		return;
+	if (_artist == NULL || _track == NULL || _artist.isEmpty() || _track.isEmpty())
+		return; //emit signal if necessary, see AlbumInfo()
 
 	mapped_args["artist"] = _artist;
 	mapped_args["track"] = _track;
@@ -96,9 +103,9 @@ void LastFmMetadataFetcher::TrackInfo()
 	          this, SLOT(TrackInfoFault(int, const QString &)));
 }
 
-void LastFmMetadataFetcher::AlbumInfoFault(int /*error*/, const QString &message)
+void LastFmMetadataFetcher::AlbumInfoFault(int /*error*/, const QString & /*message*/)
 {
-	QString errorMessage(tr("Error while communicating with last.fm to retrieve an album cover.\n"));
+	/*QString errorMessage(tr("Error while communicating with last.fm to retrieve an album cover.\n"));
 	errorMessage.append("Error message is: ");
 	errorMessage.append(message);
 
@@ -106,16 +113,16 @@ void LastFmMetadataFetcher::AlbumInfoFault(int /*error*/, const QString &message
 		NULL,
 		tr("QtMPC: Warning"),
 		errorMessage
-	);
+	);*/
 
 	if (_cover) {
 		emit coverImage(QImage(), QString(), QString());
 	}
 }
 
-void LastFmMetadataFetcher::TrackInfoFault(int /*error*/, const QString &message)
+void LastFmMetadataFetcher::TrackInfoFault(int /*error*/, const QString & /*message*/)
 {
-	QString errorMessage(tr("Error while communicating with last.fm to retrieve track info.\n"));
+	/*QString errorMessage(tr("Error while communicating with last.fm to retrieve track info.\n"));
 	errorMessage.append("Error message is: ");
 	errorMessage.append(message);
 
@@ -123,7 +130,7 @@ void LastFmMetadataFetcher::TrackInfoFault(int /*error*/, const QString &message
 		NULL,
 		tr("QtMPC: Warning"),
 		errorMessage
-	);
+	);*/
 }
 
 void LastFmMetadataFetcher::AlbumInfoDone(QVariant &arg)

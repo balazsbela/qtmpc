@@ -48,7 +48,7 @@ int DirViewItemFile::row() const
 	return 0;
 }
 
-DirViewItem * const DirViewItemFile::parent() const
+DirViewItem * DirViewItemFile::parent() const
 {
 	return d_parentItem;
 }

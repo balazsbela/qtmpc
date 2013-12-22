@@ -34,6 +34,9 @@
 #include <QHeaderView>
 #include <QStringList>
 #include <QDateTime>
+#include <QProxyStyle>
+#include <QResizeEvent>
+#include <QMoveEvent>
 
 #ifdef ENABLE_KDE_SUPPORT
 #include "ui_main_window_kde.h"
@@ -42,29 +45,40 @@
 #endif
 
 #include "gui/musiclibrarymodel.h"
+#include "gui/musiclibraryproxymodel.h"
+#include "gui/playlistsmodel.h"
+#include "gui/playlistsproxymodel.h"
 #include "gui/playlisttablemodel.h"
-#include "gui/musiclibrarysortfiltermodel.h"
+#include "gui/playlisttableproxymodel.h"
 #include "gui/dirviewmodel.h"
 #include "gui/dirviewproxymodel.h"
 #include "lib/lastfm_metadata_fetcher.h"
-#include "lib/lastfm_scrobbling.h"
-#include "lib/mpdconnection.h"
+#include "lib/mpdconnectionplayback.h"
 #include "lib/mpddatabaseconnection.h"
+#include "lib/output.h"
 
 class KAction;
+class MainWindow;
 
 class VolumeSliderEventHandler : public QObject
 {
 	Q_OBJECT
 
 	public:
-		VolumeSliderEventHandler(QSlider * const volSlider, QObject *parent = 0);
+		VolumeSliderEventHandler(MainWindow *w);
 
 	protected:
 		bool eventFilter(QObject *obj, QEvent *event);
 
 	private:
-		QSlider * const volSlider;
+		MainWindow * const window;
+};
+
+class SliderStyle : public QProxyStyle
+{
+public:
+    SliderStyle(QStyle *style) : QProxyStyle(style) {}
+    int styleHint(QStyle::StyleHint hint, const QStyleOption* option = 0, const QWidget* widget = 0, QStyleHintReturn* returnData = 0) const;
 };
 
 #ifdef ENABLE_KDE_SUPPORT
@@ -80,45 +94,75 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 
 	protected:
 		void closeEvent(QCloseEvent *event);
+		void resizeEvent(QResizeEvent * event);
+		void moveEvent(QMoveEvent * event);
 
 	private:
-		MPDConnection mpd;
+		QSettings settings;
+		MPDConnectionPlayback mpd;
 		MPDDatabaseConnection mpdDb;
 		MPDStatus::State lastState;
+		quint32 songTime;
 		qint32 lastSongId;
 		quint32 lastPlaylist;
 		QDateTime lastDbUpdate;
 		int fetchStatsFactor;
 		int nowPlayingFactor;
-		QTimer statusTimer;
+		PlaylistsModel playlistsModel;
+		PlaylistsProxyModel playlistsProxyModel;
 		PlaylistTableModel playlistModel;
+		PlaylistTableProxyModel playlistProxyModel;
 		dirViewModel dirviewModel;
 		DirViewProxyModel dirProxyModel;
 		MusicLibraryModel musicLibraryModel;
-		MusicLibrarySortFilterModel libraryProxyModel;
+		MusicLibraryProxyModel libraryProxyModel;
 		LastFmMetadataFetcher metadataFetcher;
-		LastFmScrobbler scrobbler;
 		bool draggingPositionSlider;
 		const QIcon icon;
+		const QIcon icon_playing;
+		const QIcon icon_paused;
 		QIcon playbackStop;
 		QIcon playbackNext;
 		QIcon playbackPrev;
 		QIcon playbackPause;
 		QIcon playbackPlay;
-		QLabel bitrateLabel;
 		QHeaderView *playlistTableViewHeader;
 		VolumeSliderEventHandler *volumeSliderEventHandler;
-
+		QTimer elapsedTimer;
 		bool setupTrayIcon();
 		void setupPlaylistViewMenu();
 		void setupPlaylistViewHeader();
-		QAction *playPauseAction;
-		QAction *stopAction;
-		QAction *nextAction;
-		QAction *prevAction;
 #ifdef ENABLE_KDE_SUPPORT
+		KAction *action_Prev_track;
+		KAction *action_Next_track;
+		KAction *action_Play_pause_track;
+		KAction *action_Stop_track;
+		KAction *action_Increase_volume;
+		KAction *action_Decrease_volume;
+		KAction *action_Add_to_playlist;
+		KAction *action_Replace_playlist;
+		KAction *action_Load_playlist;
+		KAction *action_Remove_playlist;
+		KAction *action_Remove_from_playlist;
+		KAction *action_Clear_playlist;
+		KAction *action_Copy_song_info;
+		KAction *action_Rename_playlist;
 		KAction *quitAction;
 #else
+		QAction *action_Prev_track;
+		QAction *action_Next_track;
+		QAction *action_Play_pause_track;
+		QAction *action_Stop_track;
+		QAction *action_Increase_volume;
+		QAction *action_Decrease_volume;
+		QAction *action_Add_to_playlist;
+		QAction *action_Replace_playlist;
+		QAction *action_Load_playlist;
+		QAction *action_Remove_playlist;
+		QAction *action_Remove_from_playlist;
+		QAction *action_Clear_playlist;
+		QAction *action_Copy_song_info;
+		QAction *action_Rename_playlist;
 		QAction *quitAction;
 #endif
 		QAction *albumPlaylistViewAction;
@@ -127,18 +171,44 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 		QAction *timePlaylistViewAction;
 		QAction *trackPlaylistViewAction;
 		QAction *discPlaylistViewAction;
+		QAction *yearPlaylistViewAction;
+		
+		QAction *action_Shuffle_entire_playlist;
+		QAction *action_Shuffle_playlist_selection;
+		QAction *action_Crop_playlist;
 
 		QSystemTrayIcon *trayIcon;
 		QMenu *trayIconMenu;
 		QString toolTipText;
-		QMenu *playlistTableViewMenu;
+        QMenu *playlistTableViewMenu;
+
+        // ---------- I don't understand why these are not inherited ----
+        QPushButton *addPlaylistToPlaylistPushButton;
+        QPushButton *loadPlaylistPushButton;
+        QPushButton *removePlaylistPushButton;
+        QPushButton *savePlaylistPushButton;
+        QCheckBox *fetchInfoCheckBox;
+
+        QCheckBox *consumeCheckBox;
+        QLineEdit *searchLibraryLineEdit;
+        QLineEdit *searchDirViewLineEdit;
+        QLineEdit *searchPlaylistLineEdit;
+        QPushButton *replacePlaylistPushButton;
+        QPushButton *dirViewReplacePlaylistPushButton;
+        QMenu *menu_Outputs;
+        QPushButton *shufflePlaylistPushButton;
+        QTreeView *playlistsView;
+
+        //-----------------------
 
 		void addSelectionToPlaylist();
 		void addDirViewSelectionToPlaylist();
 		QStringList walkDirView(QModelIndex rootItem);
-
+		void setupPlaylists();
+		
 	private slots:
 		int showPreferencesDialog(const int tab = 0);
+		void mpdConnectionDied();
 #ifndef ENABLE_KDE_SUPPORT
 		void showAboutDialog();
 #endif
@@ -147,27 +217,39 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 		void setAlbumReleaseDate(QDate);
 		void positionSliderPressed();
 		void positionSliderReleased();
+		void startPlayingSong();
 		void nextTrack();
 		void stopTrack();
 		void playPauseTrack();
 		void previousTrack();
 		void setVolume(int vol);
+		void increaseVolume();
+		void decreaseVolume();
 		void setPosition();
+		void setConsume(const int);
 		void setRandom(const int);
 		void setRepeat(const int);
 		void searchMusicLibrary();
+		void musicLibarySearchFieldComboBoxChanged();
+		void searchDirView();
+		void searchPlaylist();
+		void updatePlaylist(QList<Song *> *songs);
 		void updateCurrentSong(const Song *song);
 		void updateStats();
 		void updateStatus();
+		void updatePositionSilder();
 		void playlistItemActivated(const QModelIndex &);
 		void removeFromPlaylist();
+		void clearPlaylist();
+		void replacePlaylist();
 		void libraryItemActivated(const QModelIndex &);
+		void dirViewItemActivated(const QModelIndex &);
 		void addToPlaylistButtonActivated();
+		void addToPlaylistItemActivated();
 		void dirViewAddToPlaylistPushButtonActivated();
 		void trayIconClicked(QSystemTrayIcon::ActivationReason reason);
 		void crossfadingChanged(const int seconds);
 		void playlistTableViewContextMenuClicked();
-		void updateIntervalChanged(const int mseconds);
 
 		void saveSplitterState(int, int);
 
@@ -177,20 +259,36 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 		void playListTableViewToggleTime(const bool visible);
 		void playListTableViewToggleTitle(const bool visible);
 		void playListTableViewToggleDisc(const bool visible);
+		void playListTableViewToggleYear(const bool visible);
 		void playListTableViewSaveState();
 
 		void updatePlayListStatus();
 
-		void movePlaylistItems(const QList<quint32> items, const quint32 diff, const int max);
+		void movePlaylistItems(const QList<quint32> items, const int row, const int size);
 		void addFilenamesToPlaylist(const QStringList filenames, const int row, const int size);
 
-	signals:
-		void submitSong();
-		void startSong();
-		void stopSong();
-		void pauseSong();
-		void resumeSong();
-		void nowPlaying();
+		void addPlaylistToPlaylistPushButtonActivated();
+		void loadPlaylistPushButtonActivated();
+		void playlistsViewItemDoubleClicked(const QModelIndex &index);
+		void removePlaylistPushButtonActivated();
+		void savePlaylistPushButtonActivated();
+		void renamePlaylistActivated();
+		
+		void updateStoredPlaylists();
+		
+		void copySongInfo();
+		
+		void updateOutpus(const QList<Output *> outputs);
+		void outputChanged(QAction *action);
+		
+		void prepareShuffleMenu();
+		void shuffleSelection();
+		
+		void cropPlaylist();
+
+	friend class VolumeSliderEventHandler;
+	friend class PlaylistEventHandler;
+	friend class PlaylistsEventHandler;
 };
 
 #endif

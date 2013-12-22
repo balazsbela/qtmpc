@@ -1,10 +1,15 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
 <file>images/icon.svg</file>
+<file>images/icon_playing.svg</file>
+<file>images/icon_paused.svg</file>
 <file>images/player_next.svg</file>
 <file>images/player_pause.svg</file>
 <file>images/player_play.svg</file>
 <file>images/player_prev.svg</file>
 <file>images/player_stop.svg</file>
+<file>images/artist.png</file>
+<file>images/album.png</file>
+<file>images/song.png</file>
 </qresource>
 </RCC>

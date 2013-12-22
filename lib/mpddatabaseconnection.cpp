@@ -24,23 +24,15 @@
 #include "mpdparseutils.h"
 
 MPDDatabaseConnection::MPDDatabaseConnection(QObject *parent)
-	: MPDConnection(parent)
+	: MPDConnectionBase(parent)
 {
 }
 
 MPDDatabaseConnection::MPDDatabaseConnection(const QString &host, const quint16 port,
 QObject*parent)
-	: MPDConnection(host, port, parent)
+	: MPDConnectionBase(host, port, parent)
 {
 }
-
-#if QT_VERSION < 0x040400
-void MPDDatabaseConnection::run()
-{
-	exec();
-}
-#endif
-
 
 /*
  * Admin commands
@@ -53,6 +45,7 @@ void MPDDatabaseConnection::update()
 	data = readFromSocket();
 
 	delete data;
+	disconnectFromMPD();
 }
 
 /*
@@ -75,23 +68,7 @@ void MPDDatabaseConnection::listAllInfo(QDateTime db_update)
 	emit musicLibraryUpdated(MPDParseUtils::parseLibraryItems(data), db_update);
 
 	delete data;
-}
-
-/**
- * list info from a direction
- *
- * TODO: db_update should be parsed correctly
- */
-void MPDDatabaseConnection::lsInfo()
-{
-	QByteArray *data;
-
-	sendCommand("lsinfo");
-	data = readFromSocket();
-
-	emit musicLibraryUpdated(MPDParseUtils::parseLibraryItems(data), QDateTime());
-
-	delete data;
+	disconnectFromMPD();
 }
 
 /**
@@ -108,4 +85,5 @@ void MPDDatabaseConnection::listAll()
 	emit dirViewUpdated(MPDParseUtils::parseDirViewItems(data));
 	
 	delete data;
+	disconnectFromMPD();
 }

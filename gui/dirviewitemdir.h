@@ -37,9 +37,9 @@ class DirViewItemDir : public DirViewItem
 		DirViewItem * insertFile(const QString fileName);
 
 		int row() const;
-		DirViewItem * const parent() const;
+		DirViewItem * parent() const;
 		int childCount() const;
-		DirViewItem * const child(int row) const;
+		DirViewItem * child(int row) const;
 
 	private:
 		DirViewItem * const d_parentItem;

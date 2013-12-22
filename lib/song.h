@@ -21,7 +21,6 @@
 #ifndef SONG_H
 #define SONG_H
 
-#include <QtGlobal>
 #include <QObject>
 #include <QString>
 
@@ -39,6 +38,7 @@ class Song : public QObject
 		qint32 track;
 		quint32 pos;
 		quint32 disc;
+		quint32 year;
 
 		Song();
 		Song(const Song &);
@@ -48,19 +48,7 @@ class Song : public QObject
 		void fillEmptyFields();
 		virtual void clear();
 		static QString formattedTime(const quint32 &seconds);
-};
-
-class ScrobblingSong : public Song
-{
-	Q_OBJECT
-
-	public:
-		QString timePlayedAt;
-
-		ScrobblingSong();
-		ScrobblingSong(const ScrobblingSong &);
-		ScrobblingSong& operator=(const ScrobblingSong&);
-		void clear();
+		static const QString formatSong(const Song *song);
 };
 
 #endif

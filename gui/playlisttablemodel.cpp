@@ -25,8 +25,9 @@
 #include <QSet>
 
 #include "playlisttablemodel.h"
-#include "mpdparseutils.h"
-#include "mpdstats.h"
+#include "lib/mpdparseutils.h"
+#include "lib/mpdstats.h"
+#include "lib/mpdstatus.h"
 
 PlaylistTableModel::PlaylistTableModel(QObject *parent)
 	: QAbstractTableModel(parent),
@@ -64,6 +65,9 @@ QVariant PlaylistTableModel::headerData(int section, Qt::Orientation orientation
 			case 5:
 				return "Disc";
 				break;
+			case 6:
+				return "Year";
+				break;
 			default:
 				break;
 		}
@@ -79,7 +83,7 @@ int PlaylistTableModel::rowCount(const QModelIndex &) const
 
 int PlaylistTableModel::columnCount(const QModelIndex &) const
 {
-	return 6;
+	return 7;
 }
 
 QVariant PlaylistTableModel::data(const QModelIndex &index, int role) const
@@ -93,8 +97,9 @@ QVariant PlaylistTableModel::data(const QModelIndex &index, int role) const
 		return QVariant();
 
 	// Mark background of song currently being played
+
 	if(role == Qt::BackgroundRole && songs.at(index.row())->id == song_id) {
-		return QVariant(palette.color(QPalette::Dark));
+		return QVariant(palette.color(QPalette::Mid));
 	}
 
 	if(role == Qt::DisplayRole) {
@@ -122,54 +127,17 @@ QVariant PlaylistTableModel::data(const QModelIndex &index, int role) const
 					return QVariant();
 				return song->disc;
 				break;
+			case 6:
+				if (song->year <= 0)
+					return QVariant();
+				return song->year;
+				break;
 			default:
 				break;
 		}
 	}
 
 	return QVariant();
-}
-
-void PlaylistTableModel::updateCurrentSong(quint32 id)
-{
-	qint32 oldIndex = -1;
-
-	oldIndex = song_id;
-	song_id = id;
-
-	if(oldIndex != -1)
-		emit dataChanged(index(songIdToRow(oldIndex), 0), index(songIdToRow(oldIndex), 2));
-
-	emit dataChanged(index(songIdToRow(song_id), 0), index(songIdToRow(song_id), 2));
-}
-
-void PlaylistTableModel::updateSongs(QList<Song *> *songs)
-{
-	// Update song list and refresh model
-	while(this->songs.size())
-		delete this->songs.takeLast();
-
-	this->songs = *songs;
-	delete songs;
-	reset();
-}
-
-qint32 PlaylistTableModel::getIdByRow(qint32 row) const
-{
-	if(songs.size() <= row) {
-		return -1;
-	}
-
-	return songs.at(row)->id;
-}
-
-qint32 PlaylistTableModel::getPosByRow(qint32 row) const
-{
-	if(songs.size() <= row) {
-		return -1;
-	}
-
-	return songs.at(row)->pos;
 }
 
 Qt::DropActions PlaylistTableModel::supportedDropActions() const
@@ -249,84 +217,44 @@ bool PlaylistTableModel::dropMimeData(const QMimeData *data,
 
 	if (data->hasFormat("application/qtmpc_song_move_text")) {
 		//Act on internal moves
-
 		QByteArray encodedData = data->data("application/qtmpc_song_move_text");
 		QDataStream stream(&encodedData, QIODevice::ReadOnly);
 		QList<quint32> items;
 
-		int diff = row - lastClickedRow;
-		if (diff == 0) {
-			return true;
-		}
-
 		while (!stream.atEnd()) {
 			QString text;
 			stream >> text;
-
-			//We only do real moves
-			if (row < 0) {
-				continue;
-			}
-
 			items.append(text.toUInt());
 		}
 
-		QList<quint32>::iterator bound;
-
-		//Sort playlist to make moves easier
-		if (diff > 0) {
-			qSort(items.begin(), items.end(), qGreater<quint32>());
-			diff -= 1;
+		if (row < 0) {
+			emit moveInPlaylist(items, songs.size(), songs.size());
 		} else {
-			qSort(items);
+			emit moveInPlaylist(items, row, songs.size());
 		}
 
-		// Find if we have a playlist over or underflow
-		for (QList<quint32>::iterator i = items.begin(); i != items.end(); i++) {
-			if (diff > 0) {
-				if ((qint32)(*i + diff) >= songs.size()-1) {
-					bound = i+1;
-				}
-			} else {
-				if ((qint32)(*i + diff) <= 0) {
-					bound = i+1;
-				}
-			}
-		}
-
-		if (diff > 0) {
-			qSort(items.begin(), bound);
-		} else {
-			qSort(items.begin(), bound, qGreater<quint32>());
-		}
-
-		emit moveInPlaylist(items, diff, songs.size()-1);
 		return true;
 	} else if (data->hasFormat("application/qtmpc_songs_filename_text")) {
-		//Act on moves from the music library
-
+		//Act on moves from the music library and dir view
 		QByteArray encodedData = data->data("application/qtmpc_songs_filename_text");
 		QDataStream stream(&encodedData, QIODevice::ReadOnly);
 		QStringList filenames;
 
+                QString text;
 		while (!stream.atEnd()) {
-			QString text;
-			stream >> text;
-
-			//We only do real moves
-			if (row < 0) {
-				continue;
-			}
-
-			filenames << text;
+                    stream >> text;
+                    filenames << text;
 		}
-
 		//Check for empty playlist
 		if (this->songs.size() == 1 && this->songs.at(0)->artist == "" &&
 			this->songs.at(0)->album == "" && this->songs.at(0)->title == "") {
 			emit filesAddedInPlaylist(filenames, 0, 0);
 		} else {
-			emit filesAddedInPlaylist(filenames, row, songs.size());
+			if (row < 0) {
+				emit filesAddedInPlaylist(filenames, songs.size(), songs.size());
+			} else {
+				emit filesAddedInPlaylist(filenames, row, songs.size());
+			}
 		}
 
 		return true;
@@ -335,7 +263,25 @@ bool PlaylistTableModel::dropMimeData(const QMimeData *data,
 	return false;
 }
 
-qint32 PlaylistTableModel::songIdToRow(qint32 id) const
+qint32 PlaylistTableModel::getIdByRow(qint32 row) const
+{
+	if(songs.size() <= row) {
+		return -1;
+	}
+
+	return songs.at(row)->id;
+}
+
+qint32 PlaylistTableModel::getPosByRow(qint32 row) const
+{
+	if(songs.size() <= row) {
+		return -1;
+	}
+
+	return songs.at(row)->pos;
+}
+
+qint32 PlaylistTableModel::getRowById(qint32 id) const
 {
 	for(int i = 0; i < songs.size(); i++) {
 		if(songs.at(i)->id == id) {
@@ -346,16 +292,37 @@ qint32 PlaylistTableModel::songIdToRow(qint32 id) const
 	return -1;
 }
 
-/**
- * Set the last clicked row so we can do pretty things
- * when dragging
- *
- * @param index The QModelIndex of the last click
- */
-
-void PlaylistTableModel::clicked(const QModelIndex & index)
+Song * PlaylistTableModel::getSongByRow(const qint32 row) const
 {
-	lastClickedRow = index.row();
+	if (songs.size() <= row) {
+		return NULL;
+	}
+	
+	return songs.at(row);
+}
+
+void PlaylistTableModel::updateCurrentSong(quint32 id)
+{
+	qint32 oldIndex = -1;
+
+	oldIndex = song_id;
+	song_id = id;
+
+	if(oldIndex != -1)
+		emit dataChanged(index(getRowById(oldIndex), 0), index(getRowById(oldIndex), 2));
+
+	emit dataChanged(index(getRowById(song_id), 0), index(getRowById(song_id), 2));
+}
+
+void PlaylistTableModel::updatePlaylist(QList<Song *> *songs)
+{
+	// Update song list and refresh model
+	while(this->songs.size())
+		delete this->songs.takeLast();
+
+	this->songs = *songs;
+	delete songs;
+	reset();
 }
 
 /**
@@ -406,4 +373,15 @@ void PlaylistTableModel::playListStats()
 	stats->setPlaylistTime(time);
 	stats->releaseWriteLock();
 	emit playListStatsUpdated();
+}
+
+QSet<qint32>  PlaylistTableModel::getSongIdSet()
+{
+	QSet<qint32> ids;
+	
+	foreach(Song *s, songs) {
+		ids << s->id;
+	}
+	
+	return ids;
 }

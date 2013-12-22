@@ -46,14 +46,15 @@ class PreferencesDialog : public QDialog, private Ui::PreferencesDialog
 	private:
 		int xfade;
 		QSettings settings;
-		bool lastFmUpdated;
 
 		void writeSettings();
-		void emitLastFmReAuth();
 
 #ifdef ENABLE_KDE_SUPPORT
 		void slotButtonClicked(int button);
 #endif
+
+        // Namespaced members
+        QCheckBox *fetchInfoCheckBox;
 
 	private slots:
 		void loadSettings();
@@ -64,8 +65,6 @@ class PreferencesDialog : public QDialog, private Ui::PreferencesDialog
 	signals:
 		void systemTraySet(bool visible);
 		void crossfadingChanged(const int seconds);
-		void updateIntervalChanged(const int mseconds);
-		void lastFmReAuth(bool enabled);
 };
 
 #endif

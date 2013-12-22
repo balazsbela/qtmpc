@@ -29,7 +29,7 @@
 #include "ui_statistics_dialog.h"
 #endif
 
-#include "mpdstats.h"
+#include "lib/mpdstats.h"
 
 #ifdef ENABLE_KDE_SUPPORT
 class StatisticsDialog : public KDialog, private Ui::StatisticsDialog
